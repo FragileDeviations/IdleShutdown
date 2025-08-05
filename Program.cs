@@ -1,3 +1,5 @@
+using IdleShutdown.Windows;
+
 namespace IdleShutdown;
 
 internal static class Program

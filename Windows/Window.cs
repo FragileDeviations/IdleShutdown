@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Newtonsoft.Json;
 
-namespace IdleShutdown;
+namespace IdleShutdown.Windows;
 
 public partial class Window : Form
 {

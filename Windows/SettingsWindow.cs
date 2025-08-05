@@ -1,4 +1,4 @@
-﻿namespace IdleShutdown;
+﻿namespace IdleShutdown.Windows;
 
 public partial class SettingsWindow : Form
 {

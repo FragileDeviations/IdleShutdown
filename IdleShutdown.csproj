@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="SettingsWindow.cs">
+      <Compile Update="Windows\SettingsWindow.cs">
         <SubType>Form</SubType>
       </Compile>
     </ItemGroup>
