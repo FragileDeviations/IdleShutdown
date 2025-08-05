@@ -10,12 +10,10 @@ public partial class Window : Form
     private string _settingsFilePath;
     private static SettingsFile _settingsFile;
     private NotifyIcon _trayIcon;
-    private string _logFilePath;
     
     public Window()
     {
         InitializeComponent();
-        InitLogFile();
         LoadSettings();
         InitializeTrayIcon();
         StartMainTimer();
@@ -51,11 +49,9 @@ public partial class Window : Form
         var settingsMenuItem = new ToolStripMenuItem("Settings");
         settingsMenuItem.Click += (sender, args) =>
         {
-            Log("Opening settings window.");
             var settingsWindow = new SettingsWindow();
             settingsWindow.Setup(_settingsFile);
             settingsWindow.ShowDialog();
-            Log("Settings window closed.");
         };
         _trayIcon.ContextMenuStrip.Items.Add(settingsMenuItem);
     }
@@ -63,39 +59,10 @@ public partial class Window : Form
     #endregion
     
     
-    #region Logging
-
-    private void InitLogFile()
-    {
-        _logFilePath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty, "IdleShutdown.log");
-        if (File.Exists(_logFilePath))
-        {
-            File.Delete(_logFilePath);
-        }
-        File.Create(_logFilePath).Close();
-    }
-    
-    private void Log(string message)
-    {
-        if (string.IsNullOrEmpty(_logFilePath))
-        {
-            InitLogFile();
-        }
-
-        if (_logFilePath == null) return;
-        using var writer = new StreamWriter(_logFilePath, true);
-        writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}");
-        writer.Flush();
-        writer.Close();
-    }
-    
-    #endregion
-    
     #region Main Timer
     
     private void StartMainTimer()
     {
-        Log("Starting main timer.");
         _mainTimer.Interval = 60000;
         _mainTimer.Elapsed += MainTimerElapsed;
         _mainTimer.Start();
@@ -108,7 +75,6 @@ public partial class Window : Form
         {
             if (!_shutdownTimer.Enabled)
             {
-                Log("Starting shutdown timer due to inactive hours.");
                 StartShutdownTimer();
             }
         }
@@ -116,7 +82,6 @@ public partial class Window : Form
         {
             if (_shutdownTimer.Enabled)
             {
-                Log("Stopping shutdown timer due to active hours.");
                 StopShutdownTimer();
             }
         }
@@ -126,7 +91,6 @@ public partial class Window : Form
     
     private void StopMainTimer()
     {
-        Log("Stopping main timer.");
         _mainTimer.Stop();
         _mainTimer.Elapsed -= MainTimerElapsed;
     }
@@ -137,7 +101,6 @@ public partial class Window : Form
     
     private void StartShutdownTimer()
     {
-        Log("Starting shutdown timer.");
         _shutdownTimer.Interval = _settingsFile.IdleCheckInterval * 1000;
         _shutdownTimer.Elapsed += ShutdownTimerElapsed;
         _shutdownTimer.Start();
@@ -147,7 +110,6 @@ public partial class Window : Form
     {
         if (IsIdle() && !KeepAliveProcessesRunning())
         {
-            Log("System is idle and no keep-alive processes are running. Initiating shutdown.");
             // shutdown with 5 minute warning
             Process.Start(new ProcessStartInfo
             {
@@ -163,7 +125,6 @@ public partial class Window : Form
     
     private void StopShutdownTimer()
     {
-        Log("Stopping shutdown timer.");
         _shutdownTimer.Stop();
         _shutdownTimer.Elapsed -= ShutdownTimerElapsed;
     }
@@ -175,7 +136,6 @@ public partial class Window : Form
     private bool IsIdle()
     {
         var idleTime = IdleDetector.GetIdleTime();
-        Log($"Idle time detected: {idleTime.TotalSeconds} seconds.");
         return idleTime.TotalSeconds >= _settingsFile.IdleTimeThreshold;
     }
     
@@ -186,10 +146,8 @@ public partial class Window : Form
         {
             if (!_settingsFile.KeepAliveProcesses.Contains(process.ProcessName, StringComparer.OrdinalIgnoreCase))
                 continue;
-            Log($"Keep-alive process detected: {process.ProcessName} (PID: {process.Id}).");
             return true;
         }
-        Log("No keep-alive processes detected.");
         return false;
     }
     
@@ -209,7 +167,6 @@ public partial class Window : Form
         }
         var json = File.ReadAllText(_settingsFilePath);
         _settingsFile = JsonConvert.DeserializeObject<SettingsFile>(json);
-        Log($"Settings loaded: Threshold: {_settingsFile.IdleTimeThreshold} seconds, Check Interval: {_settingsFile.IdleCheckInterval} seconds, Start Hour: {_settingsFile.StartHour}, End Hour: {_settingsFile.EndHour}, Keep Alive Processes: {string.Join(", ", _settingsFile.KeepAliveProcesses)}");
     }
 
     public static void SaveSettings()
@@ -224,7 +181,6 @@ public partial class Window : Form
     
     private void CreateSettingsFile()
     {
-        Log("Creating default settings file.");
         _settingsFile = new SettingsFile();
         var json = JsonConvert.SerializeObject(_settingsFile, Formatting.Indented);
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
