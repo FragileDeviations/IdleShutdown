@@ -40,14 +40,18 @@ public partial class Window : Form
             ContextMenuStrip = new ContextMenuStrip()
         };
         
+        _trayIcon.ContextMenuStrip.Items.Add($"Idle Shutdown v{Program.Version}", null, (_, _) =>
+        {
+            MessageBox.Show(Program.Changelog, "Changelog", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        });
         InitializeSettingsMenu();
-        _trayIcon.ContextMenuStrip.Items.Add("Exit", null, (_, __) => Application.Exit());
+        _trayIcon.ContextMenuStrip.Items.Add("Exit", null, (_, _) => Application.Exit());
     }
 
     private void InitializeSettingsMenu()
     {
         var settingsMenuItem = new ToolStripMenuItem("Settings");
-        settingsMenuItem.Click += (sender, args) =>
+        settingsMenuItem.Click += (_, _) =>
         {
             var settingsWindow = new SettingsWindow();
             settingsWindow.Setup(_settingsFile);
@@ -85,14 +89,11 @@ public partial class Window : Form
                 StopShutdownTimer();
             }
         }
-        _mainTimer.Elapsed -= MainTimerElapsed;
-        StartMainTimer();
     }
     
     private void StopMainTimer()
     {
         _mainTimer.Stop();
-        _mainTimer.Elapsed -= MainTimerElapsed;
     }
     
     #endregion
@@ -118,15 +119,12 @@ public partial class Window : Form
                 CreateNoWindow = true,
                 UseShellExecute = false
             });
-            return;
         }
-        StartShutdownTimer();
     }
     
     private void StopShutdownTimer()
     {
         _shutdownTimer.Stop();
-        _shutdownTimer.Elapsed -= ShutdownTimerElapsed;
     }
     
     #endregion
